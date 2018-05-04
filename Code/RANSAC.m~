@@ -1,0 +1,38 @@
+function [removePts, Pts_out] = RANSAC(Pts,nonROI)
+%RANSAC Summary of this function goes here
+%   Detailed explanation goes here
+
+%%
+num_samples = 1000;
+max_perm = size(nonROI,1);
+num = size(Pts,1);
+threshold = 0.2;
+best_num_inliers = 0;
+num_planes = 1;
+X = Pts;
+center = mean(X);
+
+[ROI, nonROI] = getROI(center, X);  
+for i=1:num_planes
+    best_pts = [];
+    best_idx = [];
+    [ROI, nonROI] = getROI(center, X);  
+    for r = 1:num_samples
+        curr_ran= randperm(max_perm, 8);
+        p1 = nonROI(curr_ran(1), :);
+        p2 = nonROI(curr_ran(2), :);
+        p3 = nonROI(curr_ran(3), :);
+        n = cross((p2 - p1), (p3-p1));
+        n = repelem(n,num,1);
+        p = Pts;
+        d = dot(n, p-p1,2);
+        d = mat2gray(d);
+        d_idx = find(d < threshold);
+        curr_pts = Pts(d_idx,:);
+        if(numel(curr_pts) > numel(best_pts))
+            best_pts = curr_pts;
+            best_idx = d_idx;
+        end
+    end
+end
+end

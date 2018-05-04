@@ -34,10 +34,45 @@ ID = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_depth.png']);
 % - pcx equals to X(validInd)
 % - pcy equals to Y(validInd)
 
+PTSClouds = {};
+%%
+for p=28:35
+FrameNum = num2str(p);
+
+I = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_rgb.png']);
+ID = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_depth.png']);
+
 [pcx, pcy, pcz, r, g, b, D_, X, Y,validInd] = depthToCloud_full_RGB(ID, I, './params/calib_xtion.mat');
 Pts = [pcx pcy pcz];
 
 %% Background and noise removal
+% Get ROI by finding pixels a certain radius 
+% from the center of the image
+
+
+BPS = RANSAC(Pts,2);
+%%
+newPts = Pts;
+for i=1:numel(BPS)
+pcData = BPS{i};
+newPts(ismember(Pts, pcData,'rows'),:) = NaN;
+end
+
+%%
+% clean up
+center = mean(Pts);
+[ROI, nonROI] = getROI(center, Pts);  
+newPts(ismember(newPts, nonROI,'rows'),:) = NaN;
+%%
+Pc = pointCloud(newPts, 'Color', [r g b]/255);
+PTSClouds{p} = Pc;
+
+fprintf('Iteration: %u\n', p);
+end
+
+%% ICP
+
+[newPts] = ICP(PTSClouds{1},PTSClouds{2});
 
 
 
@@ -48,10 +83,13 @@ subplot 121
 imshow(I);
 title('RGB Input Image');
 subplot 122
-imagesc(ID);
+imagesc(ID);PTSClouds = {};
 title('Depth Input Image');
-
+%%
 figure,
 pcshow(Pts,[r g b]/255);
 drawnow;
 title('3D Point Cloud');
+%% Testing area
+
+
