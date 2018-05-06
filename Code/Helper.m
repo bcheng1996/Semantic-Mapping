@@ -34,6 +34,8 @@ ID = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_depth.png']);
 % - pcx equals to X(validInd)
 % - pcy equals to Y(validInd)
 
+
+AllPC = {};
 PTSClouds = {};
 %%
 for p=28:35
@@ -71,25 +73,31 @@ fprintf('Iteration: %u\n', p);
 end
 
 %% ICP
+%temp
+PtsClouds = load('PointClouds_scene_001.mat');
+PtsClouds = PtsClouds.PTSClouds;
 
-[newPts] = ICP(PTSClouds{1},PTSClouds{2});
 
-
-
-%% Display Images and 3D Points
-% Note this needs the computer vision toolbox.
-figure,
-subplot 121
-imshow(I);
-title('RGB Input Image');
-subplot 122
-imagesc(ID);PTSClouds = {};
-title('Depth Input Image');
 %%
-figure,
-pcshow(Pts,[r g b]/255);
-drawnow;
-title('3D Point Cloud');
-%% Testing area
+
+
+PcFinal = PtsClouds{1};
+
+for i=2:35
+[R, t, newCloud] = ICP(PcFinal,PtsClouds{i},200);
+PcFinal = PcFinal.removeInvalidPoints;
+PtsClouds{i} = PtsClouds{i}.removeInvalidPoints;
+newCldLoc = (R * PtsClouds{i}.Location' + t)';
+mergeCloud = [PcFinal.Location;newCldLoc];
+mergeCloud(any(isnan(mergeCloud),2),:) = [];
+mergeCloud_color = [PcFinal.Color; PtsClouds{i}.Color];
+ [uA, iA, iC] = unique(mergeCloud, 'rows', 'stable');
+ mergeCloud_color = mergeCloud_color(iA,:);
+ mergeCloud = uA;
+PcFinal = pointCloud(mergeCloud, 'Color', mergeCloud_color);
+end
+
+%%
+AllPC{SceneNum} = PcFinal;
 
 
