@@ -3,6 +3,8 @@ function [out] = ICP(Pts1, Pts2)
 %   Detailed explanation goes here
 %%
 %temp
+PTSClouds =  load('PointClouds_scene_001.mat');
+PTSClouds = PTSClouds.PTSClouds;
 Pc1 = PTSClouds{1};
 Pc2 = PTSClouds{2};
 
@@ -10,7 +12,7 @@ Pts1 = Pc1.Location;
 Pts1(any(isnan(Pts1),2),:) = [];
 
 
-Pts2 = Pc1.Location;
+Pts2 = Pc2.Location;
 Pts2(any(isnan(Pts2),2),:) = [];
 
 
@@ -25,7 +27,12 @@ tree = KDTreeSearcher(Pts1);
  for i=1:1
      mapping = knnsearch(tree, Pts2,'K',3);
      map = mapping(:,1);
-     otherPoints =
+     dist = sqrt(sum((Pts2 - Pts1(map,:)) .^2,2));
+     dist = mean(dist);
+     [Ri,ti] = rigidTransform(Pts2,Pts1,map);
+     Pts2 = Ri*Pts2'+ti;
+     R = Ri*R
+     t = Ri*ti+t
  end
 
 %% 
