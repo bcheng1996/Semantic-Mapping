@@ -1,5 +1,6 @@
 function [R t newCld] = ICP(Pts1, Pts2,max_iter)
 %temp
+
 %%
 normal = pcnormals(Pts1);
 normal(any(isnan(normal),2),:) = [];
@@ -12,6 +13,7 @@ Pts2(any(isnan(Pts2),2),:) = [];
 
 
 thresh = 0.001;
+dist = 9999999;
 R = [1 0 0; 0 1 0; 0 0 1];
 t = [0; 0; 0];
 
@@ -38,6 +40,7 @@ for i=1:max_iter
         %view(player,ptCloud);
       %fprintf('Iteration: %u\n mean: %u\n', i, dist);
 end
+
 
 newCld = s;
 %%
