@@ -1,6 +1,5 @@
 function [ homogeneousMatrix ] = icpPt2Plane( currPtCloud, ptCloudAcc )
-%ICP2 Summary of this function goes here
-%   Detailed explanation goes here
+
 
     origPtCloud = currPtCloud;
     homogeneousMatrix = eye(4,4);
