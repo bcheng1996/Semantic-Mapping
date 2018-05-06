@@ -1,6 +1,4 @@
 function [point_clouds] = get_points_001(start, finish, step)
-   % Segmenting object 000
-    % update your path
     path = 'Data/SingleObject/scene_001/frames/image_';
     len = finish - start + 1;
     point_clouds = cell(len,2);
