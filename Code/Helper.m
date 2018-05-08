@@ -4,17 +4,17 @@
 % Acknowledgements: Bhoram Lee of University of Pennsylvania for help with depthToCloud function
 
 clc
-clear all
+% clear all
 close all
 
 %% Setup Paths and Read RGB and Depth Images
-Path = '../Data/SingleObject/'; 
-SceneNum = 1;
+Path = 'Data/MultipleObjects/'; 
+SceneNum = 50;
 SceneName = sprintf('%0.3d', SceneNum);
 FrameNum = num2str(1);
 
-I = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_rgb.png']);
-ID = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_depth.png']);
+I = imread([Path,'scene_',SceneName,'/frames/frame_',FrameNum,'_rgb.png']);
+ID = imread([Path,'scene_',SceneName,'/frames/frame_',FrameNum,'_depth.png']);
 
 %% Extract 3D Point cloud
 % Inputs:
@@ -34,70 +34,63 @@ ID = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_depth.png']);
 % - pcx equals to X(validInd)
 % - pcy equals to Y(validInd)
 
-
-AllPC = {};
-PTSClouds = {};
+% PTSClouds = {};
 %%
-for p=28:35
-FrameNum = num2str(p);
+% for p=1:0
+% FrameNum = num2str(p);
 
-I = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_rgb.png']);
-ID = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_depth.png']);
+% I = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_rgb.png']);
+% ID = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_depth.png']);
 
 [pcx, pcy, pcz, r, g, b, D_, X, Y,validInd] = depthToCloud_full_RGB(ID, I, './params/calib_xtion.mat');
 Pts = [pcx pcy pcz];
+% 
+% %% Background and noise removal
+% % Get ROI by finding pixels a certain radius 
+% % from the center of the image
+% 
+% 
+% BPS = RANSAC(Pts,2);
+% %%
+% newPts = Pts;
+% for i=1:numel(BPS)
+% pcData = BPS{i};
+% newPts(ismember(Pts, pcData,'rows'),:) = NaN;
+% end
+% 
+% %%
+% % clean up
+% center = mean(Pts);
+% [ROI, nonROI] = getROI(center, Pts);  
+% newPts(ismember(newPts, nonROI,'rows'),:) = NaN;
+% %%
+% Pc = pointCloud(newPts, 'Color', [r g b]/255);
+% PTSClouds{p} = Pc;
+% 
+% fprintf('Iteration: %u\n', p);
+% end
+% 
+% %% ICP
+% 
+% [R] = ICP(r,g,b);
+% size(indices)
+% 
 
-%% Background and noise removal
-% Get ROI by finding pixels a certain radius 
-% from the center of the image
 
-
-BPS = RANSAC(Pts,2);
+%% Display Images and 3D Points
+% Note this needs the computer vision toolbox.
+figure,
+subplot 121
+imshow(I);
+title('RGB Input Image');
+subplot 122
+imagesc(ID);PTSClouds = {};
+title('Depth Input Image');
 %%
-newPts = Pts;
-for i=1:numel(BPS)
-pcData = BPS{i};
-newPts(ismember(Pts, pcData,'rows'),:) = NaN;
-end
-
-%%
-% clean up
-center = mean(Pts);
-[ROI, nonROI] = getROI(center, Pts);  
-newPts(ismember(newPts, nonROI,'rows'),:) = NaN;
-%%
-Pc = pointCloud(newPts, 'Color', [r g b]/255);
-PTSClouds{p} = Pc;
-
-fprintf('Iteration: %u\n', p);
-end
-
-%% ICP
-%temp
-PtsClouds = load('PointClouds_scene_001.mat');
-PtsClouds = PtsClouds.PTSClouds;
-
-
-%%
-
-
-PcFinal = PtsClouds{1};
-
-for i=2:35
-[R, t, newCloud] = ICP(PcFinal,PtsClouds{i},200);
-PcFinal = PcFinal.removeInvalidPoints;
-PtsClouds{i} = PtsClouds{i}.removeInvalidPoints;
-newCldLoc = (R * PtsClouds{i}.Location' + t)';
-mergeCloud = [PcFinal.Location;newCldLoc];
-mergeCloud(any(isnan(mergeCloud),2),:) = [];
-mergeCloud_color = [PcFinal.Color; PtsClouds{i}.Color];
- [uA, iA, iC] = unique(mergeCloud, 'rows', 'stable');
- mergeCloud_color = mergeCloud_color(iA,:);
- mergeCloud = uA;
-PcFinal = pointCloud(mergeCloud, 'Color', mergeCloud_color);
-end
-
-%%
-AllPC{SceneNum} = PcFinal;
+figure,
+pcshow(Pts,[r g b]/255);
+drawnow;
+title('3D Point Cloud');
+%% Testing area
 
 
